@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  password  String
+  role      Role       @default(USER)
+  createdAt DateTime   @default(now())
+  favorites Favorite[]
+
+  @@index([email])
+}
+
+model Movie {
+  id          String     @id @default(uuid())
+  title       String
+  overview    String
+  releaseDate DateTime
+  rating      Float
+  posterUrl   String?
+  source      String     @default("LOCAL")
+  externalId  String?    @unique
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  favorites   Favorite[]
+
+  @@index([title])
+  @@index([rating])
+  @@index([createdAt])
+  @@index([source])
+}
+
+model Favorite {
+  id      String @id @default(uuid())
+  userId  String
+  movieId String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  movie   Movie  @relation(fields: [movieId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, movieId])
+  @@index([userId])
+  @@index([movieId])
+}
